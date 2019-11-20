@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Diags from '../views/Diags.vue'
+import Sharepoint from '../views/Sharepoint-patrimoine.vue'
 import help from '../views/help.vue'
 
 Vue.use(VueRouter)
@@ -16,6 +17,11 @@ const routes = [
     path: '/diags',
     name: 'diags',
     component: Diags
+  },
+  {
+    path: '/sharepoint',
+    name: 'sharepoint',
+    component: Sharepoint
   },
   {
     path: '/about',

@@ -183,6 +183,7 @@ export default {
       // so now comparing your old to new array you would know if a state got
       // added or removed, and fire subsequent methods accordingly.
       // this.$store.commit('changeSelectedResidence', newValue)
+      this.$store.dispatch('setCurrentResidence', newValue)
       this.$store.dispatch("getResidenceDocs", newValue);
     }
   },
@@ -210,7 +211,6 @@ export default {
   computed: {
     ...mapState({
       diagDocs: state => {
-        console.log("Ouai ", state.diagDocs.fullList);
         return state.diagDocs.fullList;
       }
     }),

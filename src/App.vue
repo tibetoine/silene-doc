@@ -16,9 +16,9 @@
         </v-list>
       </v-navigation-drawer>
 
-      <v-app-bar app color="indigo" dark>
+      <v-app-bar app color="primary" dark>
         <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-        <v-toolbar-title>Documents Silene</v-toolbar-title>
+        <router-link to="/"><v-toolbar-title style="color:white;">Documents Silene</v-toolbar-title></router-link>
         <v-icon style="margin-left:20px;">menu_book</v-icon>
       </v-app-bar>
 
@@ -33,7 +33,8 @@ export default {
   data: () => ({
     drawer: null,
     items: [
-      { icon: "bug_report", text: "Diagnostics", path: "/diags" },
+      { icon: "bug_report", text: "Docs Diagnostics", path: "/diags" },
+      { icon: "all_inbox", text: "Docs Techniques", path: "/sharepoint" },
       { icon: "help", text: "Help", path: "/help" }
       /* { icon: 'cloud', text: 'Météo', path: '/meteo' },
       { icon: 'location_city', text: 'BIM', path: '/bim' },
