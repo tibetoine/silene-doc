@@ -9,7 +9,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title>{{ item.text }}</v-list-item-title>
+                <v-list-item-title>{{ item.text }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </template>
@@ -41,7 +41,12 @@ export default {
       { icon: 'help', text: 'Aide', path: '/help' }
       { icon: 'library_books', text: 'Docs', path: '/docs' } */
     ]
-  })
+  }),
+  created() {
+    /* Charge les données de résidence Sharepoint */
+    // console.log('chargement des données')
+    this.$store.dispatch("getSharepointResidences");
+  }
 };
 </script>
 <style lang="scss">

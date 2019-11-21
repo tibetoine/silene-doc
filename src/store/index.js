@@ -16,21 +16,7 @@ export default new Vuex.Store({
       errorState: false,
       errorMessage: "Aucune erreur enregistré"
     },
-    currentResidence: null,
-    residences: {
-      selectedResidence: null,
-      fullList: [
-        { label: "0070 - Dolto", idResidence: "0070" },
-        { label: "0079 - Moulin de la Butte", idResidence: "0079" },
-        { label: "0901 - Lycée expérimental", idResidence: "0901" },
-        { label: "0003 - Gambetta", idResidence: "0003" },
-        { label: "0241 - Artimon", idResidence: "0241" },
-        { label: "0082 - Aviateurs", idResidence: "0082" },
-        { label: "0112 - Suzanne Lenglen", idResidence: "0112" },
-        { label: "0170 - Aéris", idResidence: "0170" },
-        { label: "0031 - Provence", idResidence: "0031" }
-      ]
-    },
+    currentResidence: null,    
     sharepointResidences: {
       selectedResidence: null,
       fullList: []
@@ -108,7 +94,7 @@ export default new Vuex.Store({
         // console.log('Get avec les params residenceId: ',residenceId, ' arrayUrl : ', arrayUrl )
 
         const response = await rest.getSharepointResidenceDocs(residence.residenceId, librariesUrl.join());
-        const documents = response.data;
+        const documents = response.data.result;
         /* 2/ Enregistrement dans le store */
         context.commit("SET_SHAREPOINT_DOCS_LIST", documents);
       } catch (error) {
@@ -127,8 +113,6 @@ export default new Vuex.Store({
     getDiagDocs: state => {
       // console.log("Returnin : ", state.diagDocs);
       return state.diagDocs;
-    },
-    selectedResidence: state => state.residences.selectedResidence,
-    residences: state => state.residences.fullList
+    }
   }
 });

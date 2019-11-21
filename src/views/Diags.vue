@@ -2,21 +2,47 @@
   <v-container>
     <v-autocomplete
       label="Résidences"
-      v-model="selected"
       :items="residences"
+      v-model="selected"
       color="blue-grey lighten-2"
-      item-text="label"
-      item-value="idResidence"
+      item-value="residence"
       prepend-icon="mdi-city"
-    ></v-autocomplete>
+      return-object
+      solo
+    >
+      <template v-slot:selection="data">
+        <v-chip
+          :input-value="data.selected"
+          color="blue-grey lighten-2"
+          class="white--text"
+          v-on="data.on"
+        >
+          <v-icon left>mdi-office-building</v-icon>
+          <span>{{data.item.residence.residenceId}} - {{data.item.residence.residenceName}}</span>
+        </v-chip>
+      </template>
+      <template v-slot:item="{ item }">
+        <v-list-item-avatar
+          :color="item.disabled ? 'blue lighten-5':'blue lighten-1'"
+          class="headline font-weight-light white--text"
+        >{{ item.residence.residenceName.charAt(0) }}</v-list-item-avatar>
+        <v-list-item-content>
+          <v-list-item-title v-text="item.residence.residenceId"></v-list-item-title>
+          <v-list-item-subtitle v-text="item.residence.residenceName"></v-list-item-subtitle>
+        </v-list-item-content>
+        <v-list-item-action>
+          <v-icon :disabled="item.disabled">mdi-archive</v-icon>
+        </v-list-item-action>
+      </template>
+    </v-autocomplete>
     <v-text-field
-      v-if="(maList.length > 0 || filter !== '')"
+      v-if="(diagDocs.length > 0 || filter !== '')"
       v-model="filter"
       label="Filtrer ici par nom ou par type (Par exemple 'DAPP' ou un numéro de lot de cette résidence)"
       outlined
     ></v-text-field>
-    <v-list v-if="maList.length > 0" two-line>
-      <template v-for="(item) in maList">
+    <v-list v-if="diagDocs.length > 0" two-line>
+      <template v-for="(item) in diagDocs">
         <v-list-item :key="item.title">
           <v-list-item-avatar>
             <v-icon v-bind:class="getTypeItemsClass(item.type)">{{getTypeItemsIcon(item.type)}}</v-icon>
@@ -38,17 +64,16 @@
         </v-list-item>
       </template>
     </v-list>
-    <v-alert v-else type="info">Aucune donnée avec ces critères. 
-      
-      (Avez-vous choisi une résidence ?)</v-alert>
+    <v-alert v-else type="info">
+      Aucune donnée avec ces critères.
+      (Avez-vous choisi une résidence ?)
+    </v-alert>
 
     <v-dialog v-model="dialog" width="500">
       <v-card>
         <v-app-bar>
           <v-toolbar-title>Légende</v-toolbar-title>
-
           <v-spacer></v-spacer>
-
           <v-btn icon @click="dialog = false">
             <v-icon>close</v-icon>
           </v-btn>
@@ -88,17 +113,7 @@ export default {
     selected: null,
     dialog: false,
     filter: "",
-    residences: [
-      { label: "0070 - Dolto", idResidence: "0070" },
-      { label: "0079 - Moulin de la Butte", idResidence: "0079" },
-      { label: "0901 - Lycée expérimental", idResidence: "0901" },
-      { label: "0003 - Gambetta", idResidence: "0003" },
-      { label: "0241 - Artimon", idResidence: "0241" },
-      { label: "0082 - Aviateurs", idResidence: "0082" },
-      { label: "0112 - Suzanne Lenglen", idResidence: "0112" },
-      { label: "0170 - Aéris", idResidence: "0170" },
-      { label: "0031 - Provence", idResidence: "0031" }
-    ],
+    urlResidenceId: "",
     items: {
       BSDA: {
         description: "Bordereau de Suivi de déchets Amiante",
@@ -177,14 +192,26 @@ export default {
       }
     }
   }),
+  created() {
+    // TODO : Validate params
+    this.urlResidenceId = this.$route.query.residenceId;
+    this.selected = {residence:{residenceId:this.$route.query.residenceId}}
+    if (this.urlResidenceId !== "") {
+      this.$store.dispatch("setCurrentResidence", this.urlResidenceId);
+      this.$store.dispatch("getResidenceDocs", this.urlResidenceId);
+    }
+  },
   watch: {
     selected(newValue, oldValue) {
       console.log(newValue, " - ", oldValue);
       // so now comparing your old to new array you would know if a state got
       // added or removed, and fire subsequent methods accordingly.
       // this.$store.commit('changeSelectedResidence', newValue)
-      this.$store.dispatch('setCurrentResidence', newValue)
-      this.$store.dispatch("getResidenceDocs", newValue);
+      this.$store.dispatch(
+        "setCurrentResidence",
+        newValue.residence.residenceId
+      );
+      this.$store.dispatch("getResidenceDocs", newValue.residence.residenceId);
     }
   },
   methods: {
@@ -214,7 +241,37 @@ export default {
         return state.diagDocs.fullList;
       }
     }),
-    maList() {
+    residences() {
+      var filteredResidences = this.$store.state.sharepointResidences.fullList.filter(
+        item => {
+          /* On passe filtered a true quand on veut voir l'item */
+          let filtered = false;
+          if (
+            removeAccent(item.residenceId.toLowerCase()).indexOf(
+              removeAccent(this.filter.toLowerCase())
+            ) > -1
+          ) {
+            filtered = true;
+          }
+          if (
+            removeAccent(item.residenceName.toLowerCase()).indexOf(
+              removeAccent(this.filter.toLowerCase())
+            ) > -1
+          ) {
+            filtered = true;
+          }
+
+          return filtered;
+        }
+      );
+
+      return filteredResidences.map(item => {
+        return {
+          residence: item
+        };
+      });
+    },
+    diagDocs() {
       return this.$store.state.diagDocs.fullList.filter(item => {
         /* On passe filtered a true quand on veut voir l'item */
         let filtered = false;
