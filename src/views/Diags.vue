@@ -9,6 +9,7 @@
       prepend-icon="mdi-city"
       return-object
       solo
+      :filter="filterResidence"
     >
       <template v-slot:selection="data">
         <v-chip
@@ -18,17 +19,17 @@
           v-on="data.on"
         >
           <v-icon left>mdi-office-building</v-icon>
-          <span>{{data.item.residence.residenceId}} - {{data.item.residence.residenceName}}</span>
+          <span>{{data.item.residenceId}} - {{data.item.residenceName}}</span>
         </v-chip>
       </template>
       <template v-slot:item="{ item }">
         <v-list-item-avatar
           :color="item.disabled ? 'blue lighten-5':'blue lighten-1'"
           class="headline font-weight-light white--text"
-        >{{ item.residence.residenceName.charAt(0) }}</v-list-item-avatar>
+        >{{ item.residenceName.charAt(0) }}</v-list-item-avatar>
         <v-list-item-content>
-          <v-list-item-title v-text="item.residence.residenceId"></v-list-item-title>
-          <v-list-item-subtitle v-text="item.residence.residenceName"></v-list-item-subtitle>
+          <v-list-item-title v-text="item.residenceId"></v-list-item-title>
+          <v-list-item-subtitle v-text="item.residenceName"></v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-action>
           <v-icon :disabled="item.disabled">mdi-archive</v-icon>
@@ -105,7 +106,7 @@
 
 <script>
 import { mapState } from "vuex";
-import { removeAccent } from "../shared/helper";
+import { removeAccent, filterResidence } from "../shared/helper";
 
 export default {
   name: "diags",
@@ -193,25 +194,28 @@ export default {
     }
   }),
   created() {
-    // TODO : Validate params
-    this.urlResidenceId = this.$route.query.residenceId;
-    this.selected = {residence:{residenceId:this.$route.query.residenceId}}
-    if (this.urlResidenceId !== "") {
-      this.$store.dispatch("setCurrentResidence", this.urlResidenceId);
-      this.$store.dispatch("getResidenceDocs", this.urlResidenceId);
+    if (this.$store.state.currentResidence) {
+      this.selected = this.$store.state.currentResidence
     }
   },
+  mounted() {
+    
+  },
   watch: {
-    selected(newValue, oldValue) {
-      console.log(newValue, " - ", oldValue);
+    selected(newValue) {
       // so now comparing your old to new array you would know if a state got
       // added or removed, and fire subsequent methods accordingly.
-      // this.$store.commit('changeSelectedResidence', newValue)
       this.$store.dispatch(
         "setCurrentResidence",
-        newValue.residence.residenceId
+        newValue
       );
-      this.$store.dispatch("getResidenceDocs", newValue.residence.residenceId);
+      this.$store.dispatch("getResidenceDocs", newValue.residenceId);
+    },
+    currentResidence(newValue) {
+
+      if (newValue) {
+        this.selected = newValue
+      }
     }
   },
   methods: {
@@ -233,43 +237,29 @@ export default {
       } else {
         return defaultIcon;
       }
+    }, 
+    filterResidence: function(item, queryText) {
+      return filterResidence(item, queryText)
     }
+    
   },
   computed: {
     ...mapState({
       diagDocs: state => {
         return state.diagDocs.fullList;
+      },
+      currentResidence: state => {
+        return state.currentResidence
       }
     }),
     residences() {
-      var filteredResidences = this.$store.state.sharepointResidences.fullList.filter(
-        item => {
-          /* On passe filtered a true quand on veut voir l'item */
-          let filtered = false;
-          if (
-            removeAccent(item.residenceId.toLowerCase()).indexOf(
-              removeAccent(this.filter.toLowerCase())
-            ) > -1
-          ) {
-            filtered = true;
-          }
-          if (
-            removeAccent(item.residenceName.toLowerCase()).indexOf(
-              removeAccent(this.filter.toLowerCase())
-            ) > -1
-          ) {
-            filtered = true;
-          }
+      var filteredResidences = this.$store.state.sharepointResidences.fullList;
 
-          return filtered;
-        }
-      );
-
-      return filteredResidences.map(item => {
-        return {
-          residence: item
-        };
+      var mapResidences = filteredResidences.map(item => {
+        return item;
       });
+
+      return mapResidences;
     },
     diagDocs() {
       return this.$store.state.diagDocs.fullList.filter(item => {

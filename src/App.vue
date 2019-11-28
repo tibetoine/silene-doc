@@ -34,18 +34,39 @@ export default {
     drawer: null,
     items: [
       { icon: "bug_report", text: "Docs Diagnostics", path: "/diags" },
-      { icon: "all_inbox", text: "Docs Techniques", path: "/sharepoint" },
+      { icon: "all_inbox", text: "Docs Techniques", path: "/tech" },
       { icon: "help", text: "Help", path: "/help" }
       /* { icon: 'cloud', text: 'Météo', path: '/meteo' },
       { icon: 'location_city', text: 'BIM', path: '/bim' },
       { icon: 'help', text: 'Aide', path: '/help' }
       { icon: 'library_books', text: 'Docs', path: '/docs' } */
-    ]
+    ],
+    urlResidenceId: "",
+    currentResidence: null
   }),
   created() {
     /* Charge les données de résidence Sharepoint */
     // console.log('chargement des données')
-    this.$store.dispatch("getSharepointResidences");
+    return this.$store.dispatch("getSharepointResidences").then(() => {
+      /* Récupération d'une résidence si param dans l'URL  */
+      this.urlResidenceId = this.$route.query.residenceId;
+      if (this.urlResidenceId && this.urlResidenceId!==""){
+        /* Récupération d'un résidence dans la liste des résidences */
+        let residences = this.$store.state.sharepointResidences.fullList
+        residences.forEach(element => {
+          if (element && element.residenceId == this.urlResidenceId) {
+            this.currentResidence = element
+          }
+        });
+        /* Chargement d'une residence. */
+        console.log('set residence : ' , this.currentResidence)
+        this.$store.dispatch("setCurrentResidence", this.currentResidence);
+        /* Chargement des document pour les documents techniques */
+        this.$store.dispatch("getSharepointResidenceDocs", this.currentResidence)
+        /* Chargement des document pour les diags */
+        this.$store.dispatch("getResidenceDocs", this.currentResidence.residenceId);
+      }
+    })
   }
 };
 </script>

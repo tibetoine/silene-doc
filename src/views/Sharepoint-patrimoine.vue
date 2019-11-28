@@ -4,11 +4,12 @@
       label="Résidences"
       :items="residences"
       v-model="selected"
-      color="blue-grey lighten-2"      
+      color="blue-grey lighten-2"
       item-value="residence"
       prepend-icon="mdi-city"
       return-object
       solo
+      :filter="filterResidence"
     >
       <template v-slot:selection="data">
         <v-chip
@@ -18,17 +19,17 @@
           v-on="data.on"
         >
           <v-icon left>mdi-office-building</v-icon>
-          <span>{{data.item.residence.residenceId}} - {{data.item.residence.residenceName}}</span>
+          <span>{{data.item.residenceId}} - {{data.item.residenceName}}</span>
         </v-chip>
       </template>
       <template v-slot:item="{ item }">
         <v-list-item-avatar
           :color="item.disabled ? 'blue lighten-5':'blue lighten-1'"
           class="headline font-weight-light white--text"
-        >{{ item.residence.residenceName.charAt(0) }}</v-list-item-avatar>
+        >{{ item.residenceName.charAt(0) }}</v-list-item-avatar>
         <v-list-item-content>
-          <v-list-item-title v-text="item.residence.residenceId"></v-list-item-title>
-          <v-list-item-subtitle v-text="item.residence.residenceName"></v-list-item-subtitle>
+          <v-list-item-title v-text="item.residenceId"></v-list-item-title>
+          <v-list-item-subtitle v-text="item.residenceName"></v-list-item-subtitle>
         </v-list-item-content>
         <v-list-item-action>
           <v-icon :disabled="item.disabled">mdi-archive</v-icon>
@@ -36,6 +37,7 @@
       </template>
     </v-autocomplete>
     <v-text-field
+      v-if="(sharepointDocs.length > 0 || filter !== '')"
       v-model="filter"
       label="Filtrer ici "
       outlined
@@ -45,7 +47,9 @@
       <template v-for="(item) in sharepointDocs">
         <v-list-item :key="item.title">
           <v-list-item-avatar>
-            <v-icon v-bind:class="getTypeItemsClass(item.typeLabel)">{{getTypeItemsIcon(item.typeLabel)}}</v-icon>
+            <v-icon
+              v-bind:class="getTypeItemsClass(item.typeLabel)"
+            >{{getTypeItemsIcon(item.typeLabel)}}</v-icon>
           </v-list-item-avatar>
           <v-list-item-content>
             <v-list-item-title v-html="item.documentName"></v-list-item-title>
@@ -57,17 +61,18 @@
             </v-btn>
           </v-list-item-action>
           <v-list-item-action>
-            <v-btn icon target="_blank" :href="item.link">
+            <v-btn icon target="_blank" @click="downloadFile(item)">
               <v-icon color="grey">get_app</v-icon>
             </v-btn>
           </v-list-item-action>
         </v-list-item>
       </template>
     </v-list>
-    <v-alert v-else type="info">Aucune donnée avec ces critères. 
-      
-      (Avez-vous choisi une résidence ?)</v-alert>
-      <v-dialog v-model="dialog" width="500">
+    <v-alert v-else type="info">
+      Aucune donnée avec ces critères.
+      (Avez-vous choisi une résidence ?)
+    </v-alert>
+    <v-dialog v-model="dialog" width="500">
       <v-card>
         <v-app-bar>
           <v-toolbar-title>Légende</v-toolbar-title>
@@ -103,7 +108,7 @@
 
 <script>
 import { mapState } from "vuex";
-import { removeAccent } from "../shared/helper";
+import { removeAccent, filterResidence } from "../shared/helper";
 
 export default {
   name: "sharepoint",
@@ -123,20 +128,52 @@ export default {
         class: "blue white--text"
       }
     }
-  }),    
+  }),
   watch: {
-    selected(newValue, oldValue) {
-      console.log(newValue, " - ", oldValue);
-      // so now comparing your old to new array you would know if a state got
-      // added or removed, and fire subsequent methods accordingly.
-      console.log("dsfdsfs", newValue.residence.residenceId)
-      this.$store.dispatch('setCurrentResidence', newValue.residence.residenceId)
-      console.log("yeakjh", newValue.residence.libraries[0])
-      console.log("sdfdsfdsfds", newValue.residence.libraries)
-      this.$store.dispatch("getSharepointResidenceDocs", newValue.residence);
+    selected(newValue) {
+      this.$store.dispatch("setCurrentResidence", newValue);
+      this.$store.dispatch("getSharepointResidenceDocs", newValue);
+    },
+    currentResidence(newValue) {
+      if (newValue) {
+        this.selected = newValue;
+      }
     }
   },
   methods: {
+    downloadFile(item) {
+      console.log(
+        "item.sharepointServerRelativeUrl : ",
+        item.sharepointServerRelativeUrl
+      );
+      this.$store
+        .dispatch("getSharepointDoc", item.sharepointServerRelativeUrl)
+        .then(() => {
+          let downloadedFile = this.$store.state.sharepointDownloadedDoc;
+          if (downloadedFile) {
+            console.log("downloadedFile : ", downloadedFile);
+            console.log(
+              "contentType : ",
+              downloadedFile.headers["content-type"]
+            );
+          }
+
+          /* Récupère le nom du fichier */
+           var parts = item.sharepointServerRelativeUrl.split("/");
+          var fileName = parts[parts.length - 1];
+
+          console.log("FileName: " , fileName)
+          this.forceFileDownload(downloadedFile, fileName);
+        });
+    },
+    forceFileDownload(response, fileName) {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName); //or any other extension
+      document.body.appendChild(link);
+      link.click();
+    },
     getTypeItemsClass: function(typeLabel) {
       let defaultClass = "blue white--text";
       // console.log('Récupération de classe pour : ', typeLabel, this.items[typeLabel])
@@ -155,41 +192,23 @@ export default {
       } else {
         return defaultIcon;
       }
+    },
+    filterResidence: function(item, queryText) {
+      return filterResidence(item, queryText);
     }
   },
   computed: {
     ...mapState({
-      
+      currentResidence: state => {
+        return state.currentResidence;
+      }
     }),
     residences() {
-      var filteredResidences = this.$store.state.sharepointResidences.fullList.filter(
-        item => {
-          /* On passe filtered a true quand on veut voir l'item */
-          let filtered = false;
-          if (
-            removeAccent(item.residenceId.toLowerCase()).indexOf(
-              removeAccent(this.filter.toLowerCase())
-            ) > -1
-          ) {
-            filtered = true;
-          }
-          if (
-            removeAccent(item.residenceName.toLowerCase()).indexOf(
-              removeAccent(this.filter.toLowerCase())
-            ) > -1
-          ) {
-            filtered = true;
-          }
-
-          return filtered;
-        }
-      );
-
+      var filteredResidences = this.$store.state.sharepointResidences.fullList;
       return filteredResidences.map(item => {
-        return {
-          residence: item,
-          disabled: !item.libraries || item.libraries.length <= 0
-        };
+        let disabled = !item.libraries || item.libraries.length <= 0;
+        item.disabled = disabled;
+        return item;
       });
     },
     sharepointDocs() {

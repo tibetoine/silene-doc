@@ -19,7 +19,7 @@ const routes = [
     component: Diags
   },
   {
-    path: '/sharepoint',
+    path: '/tech',
     name: 'sharepoint',
     component: Sharepoint
   },

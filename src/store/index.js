@@ -20,7 +20,8 @@ export default new Vuex.Store({
     sharepointResidences: {
       selectedResidence: null,
       fullList: []
-    }
+    },
+    sharepointDownloadedDoc : null
   },
   mutations: {
     SET_DOCS_LIST(state, payload) {
@@ -28,6 +29,9 @@ export default new Vuex.Store({
     },
     SET_SHAREPOINT_RESIDENCES_LIST(state, payload) {
       state.sharepointResidences.fullList = payload;
+    },
+    SET_SHAREPOINT_DOC(state, payload) {
+      state.sharepointDownloadedDoc = payload;
     },
     SET_ERROR(state, payload) {
       state.error.errorState = true;
@@ -45,10 +49,10 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    async setCurrentResidence (context, idResidence) {
-      console.log('id residence', idResidence)
+    async setCurrentResidence (context, residence) {
+      // console.log('Residence', residence)
       /* Enregistrement dans le store */
-      context.commit("SET_CURRENT_RESIDENCE", idResidence);
+      context.commit("SET_CURRENT_RESIDENCE", residence);
     },
     async getResidenceDocs(context, idResidence) {
       context.commit("RESET_ERROR");
@@ -84,9 +88,27 @@ export default new Vuex.Store({
         );
       }
     },
+    async getSharepointDoc(context, urlDoc) {
+      try {
+        const response = await rest.getSharepointDocByUrl(urlDoc);
+        /* TODO Manipulation d'un fichier */
+        const sharepointDocResponse = response;
+        /* 2/ Enregistrement dans le store */
+        context.commit("SET_SHAREPOINT_DOC", sharepointDocResponse);
+      } catch (error) {
+        // Gestion de l'erreur
+        // Toggle message erreur.
+        context.commit(
+          "SET_ERROR",
+          "Impossible de récupérer ce document Sharepoint",
+          error
+        );
+      }
+    },
     async getSharepointResidenceDocs (context, residence) {
 
-      var librariesUrl= []
+      var librariesUrl = []
+      console.log('getSharepointResidenceDocs - residence : ', residence)
       residence.libraries.forEach(element => {
         librariesUrl.push(element.libraryURL)
       });
@@ -113,6 +135,7 @@ export default new Vuex.Store({
     getDiagDocs: state => {
       // console.log("Returnin : ", state.diagDocs);
       return state.diagDocs;
-    }
+    },
+    getSharepointDownloadDoc : state => state.sharepointDownloadedDoc
   }
 });

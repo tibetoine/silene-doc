@@ -18,5 +18,13 @@ export default {
       console.error(error);
     }
     return obj;
+  },
+  getFile: async path => {
+    try {
+      var obj = await axiosInstance.get(url(path), {responseType:'arraybuffer'});
+    } catch (error) {
+      console.error(error);
+    }
+    return obj;
   }
 };

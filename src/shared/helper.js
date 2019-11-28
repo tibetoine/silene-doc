@@ -11,4 +11,32 @@ function removeAccent (s) {
   return ret
 }
 
-export {removeAccent}
+/**
+ * Permet de filtrer dans un select de résidences.
+ * @param {*} item 
+ * @param {*} queryText 
+ */
+function filterResidence(item, queryText) {
+  let filtered = false
+  
+  /* Si ça correspond à l'ID de résidence */
+  if (
+    removeAccent(item.residenceId.toLowerCase()).indexOf(
+      removeAccent(queryText.toLowerCase()) 
+    )  > -1
+  ) {
+    filtered = true
+  }
+
+  /* Si ça correspond au nom de résidence*/
+  if (
+    removeAccent(item.residenceName.toLowerCase()).indexOf(
+      removeAccent(queryText.toLowerCase())
+    ) > -1
+  ) {
+    filtered = true
+  }
+  return filtered;
+}
+
+export {removeAccent, filterResidence}
