@@ -12,6 +12,9 @@ export default new Vuex.Store({
     sharepointDocs: {
       fullList: []
     },
+    sharepointPlans: {
+      fullList: []
+    },
     error: {
       errorState: false,
       errorMessage: "Aucune erreur enregistré"
@@ -42,6 +45,9 @@ export default new Vuex.Store({
     },
     SET_SHAREPOINT_DOCS_LIST(state, payload) {
       state.sharepointDocs.fullList = payload;
+    },
+    SET_SHAREPOINT_PLANS_LIST(state, payload) {
+      state.sharepointPlans.fullList = payload;
     },
     RESET_ERROR(state) {
       state.error.errorState = false;
@@ -105,10 +111,28 @@ export default new Vuex.Store({
         );
       }
     },
+    async getSharepointResidencePlans (context, residence) {
+      // console.log('getSharepointResidencePlans - residence : ', residence)
+      try {
+        // console.log('Get avec les params residenceId: ',residenceId, ' arrayUrl : ', arrayUrl )
+        const response = await rest.getSharepointResidencePlans(residence.residenceId);
+        const documents = response.data.result;
+        /* 2/ Enregistrement dans le store */
+        context.commit("SET_SHAREPOINT_PLANS_LIST", documents);
+      } catch (error) {
+        // Gestion de l'erreur
+        // Toggle message erreur.
+        context.commit(
+          "SET_ERROR",
+          "Impossible de récupérer les plans sharepoint depuis l'API",
+          error
+        );
+      }
+    },
     async getSharepointResidenceDocs (context, residence) {
 
       var librariesUrl = []
-      console.log('getSharepointResidenceDocs - residence : ', residence)
+      // console.log('getSharepointResidenceDocs - residence : ', residence)
       residence.libraries.forEach(element => {
         librariesUrl.push(element.libraryURL)
       });

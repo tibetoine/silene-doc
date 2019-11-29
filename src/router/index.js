@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Diags from '../views/Diags.vue'
 import Sharepoint from '../views/Sharepoint-patrimoine.vue'
+import Plans from '../views/Sharepoint-plans.vue'
 import help from '../views/help.vue'
 
 Vue.use(VueRouter)
@@ -11,17 +12,34 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    component: Home
+    component: Home,
+    meta: {
+      icon: 'home'
+    }
   },
   {
     path: '/diags',
-    name: 'diags',
-    component: Diags
+    name: 'Diagnostics',
+    component: Diags,
+    meta: {
+      icon: 'bug_report'
+    }
   },
   {
     path: '/tech',
-    name: 'sharepoint',
-    component: Sharepoint
+    name: 'Docs Sharepoint',
+    component: Sharepoint,
+    meta: {
+      icon: 'menu_book'
+    }
+  },
+  {
+    path: '/plans',
+    name: 'Planothèque',
+    component: Plans,
+    meta: {
+      icon: 'map'
+    }
   },
   {
     path: '/about',
@@ -33,11 +51,14 @@ const routes = [
   },
   {
     path: '/help',
-    name: 'help',
+    name: 'Aide',
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: help
+    component: help,
+    meta: {
+      icon: 'live_help'
+    }
   }
 ]
 

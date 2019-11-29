@@ -111,20 +111,35 @@ import { mapState } from "vuex";
 import { removeAccent, filterResidence } from "../shared/helper";
 
 export default {
-  name: "sharepoint",
+  name: "plans",
   data: () => ({
     selected: null,
     dialog: false,
     filter: "",
     items: {
-      Devis: {
+      Réseau: {
         description: "Bordereau de Suivi de déchets Amiante",
-        icon: "assignment",
+        icon: "map",
+        class: "green lighten-1 black--text"
+      },
+      Codification: {
+        description: "Bordereau de Suivi de déchets Amiante",
+        icon: "map",
         class: "orange black--text"
       },
-      CCTP: {
+      Architectural: {
+        description: "Bordereau de Suivi de déchets Amiante",
+        icon: "map",
+        class: "purple lighten-1 black--text"
+      },
+      Cadastral: {
+        description: "Bordereau de Suivi de déchets Amiante",
+        icon: "map",
+        class: "blue-grey lighten-1 black--text"
+      },
+      Masse: {
         description: "Rapport d'Inspection des Canalisations",
-        icon: "calendar_view_day",
+        icon: "map",
         class: "blue white--text"
       }
     }
@@ -132,7 +147,7 @@ export default {
   watch: {
     selected(newValue) {
       this.$store.dispatch("setCurrentResidence", newValue);
-      this.$store.dispatch("getSharepointResidenceDocs", newValue);
+      this.$store.dispatch("getSharepointResidencePlans", newValue);
     },
     currentResidence(newValue) {
       if (newValue) {
@@ -146,10 +161,9 @@ export default {
         .dispatch("getSharepointDoc", item.sharepointServerRelativeUrl)
         .then(() => {
           let downloadedFile = this.$store.state.sharepointDownloadedDoc;
-          
 
           /* Récupère le nom du fichier */
-          var parts = item.sharepointServerRelativeUrl.split("/");
+           var parts = item.sharepointServerRelativeUrl.split("/");
           var fileName = parts[parts.length - 1];
 
           this.forceFileDownload(downloadedFile, fileName);
@@ -201,7 +215,7 @@ export default {
       });
     },
     sharepointDocs() {
-      return this.$store.state.sharepointDocs.fullList.filter(item => {
+      return this.$store.state.sharepointPlans.fullList.filter(item => {
         /* On passe filtered a true quand on veut voir l'item */
         let filtered = false;
         if (

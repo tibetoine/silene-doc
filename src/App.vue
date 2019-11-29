@@ -18,8 +18,8 @@
 
       <v-app-bar app color="primary" dark>
         <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-        <router-link to="/"><v-toolbar-title style="color:white;">Documents Silene</v-toolbar-title></router-link>
-        <v-icon style="margin-left:20px;">menu_book</v-icon>
+        <router-link to="/"><v-toolbar-title style="color:white;">Documents Silene - {{routeName()}}</v-toolbar-title></router-link>
+        <v-icon style="margin-left:20px;">{{routeIcon()}}</v-icon>
       </v-app-bar>
 
       <v-content>
@@ -35,6 +35,7 @@ export default {
     items: [
       { icon: "bug_report", text: "Docs Diagnostics", path: "/diags" },
       { icon: "all_inbox", text: "Docs Techniques", path: "/tech" },
+      { icon: "map", text: "Planothèque", path: "/plans" },
       { icon: "help", text: "Help", path: "/help" }
       /* { icon: 'cloud', text: 'Météo', path: '/meteo' },
       { icon: 'location_city', text: 'BIM', path: '/bim' },
@@ -44,6 +45,15 @@ export default {
     urlResidenceId: "",
     currentResidence: null
   }),
+  methods: {
+    routeName() {
+      return this.$route.name
+    },
+    routeIcon() {
+      console.log(this.$route)
+      return this.$route.meta.icon
+    }
+  },
   created() {
     /* Charge les données de résidence Sharepoint */
     // console.log('chargement des données')
@@ -59,10 +69,11 @@ export default {
           }
         });
         /* Chargement d'une residence. */
-        console.log('set residence : ' , this.currentResidence)
         this.$store.dispatch("setCurrentResidence", this.currentResidence);
         /* Chargement des document pour les documents techniques */
         this.$store.dispatch("getSharepointResidenceDocs", this.currentResidence)
+        /* Chargement des plans */
+        this.$store.dispatch("getSharepointResidencePlans", this.currentResidence)
         /* Chargement des document pour les diags */
         this.$store.dispatch("getResidenceDocs", this.currentResidence.residenceId);
       }
