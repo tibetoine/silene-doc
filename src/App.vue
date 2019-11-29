@@ -50,7 +50,7 @@ export default {
       return this.$route.name
     },
     routeIcon() {
-      console.log(this.$route)
+      // console.log(this.$route)
       return this.$route.meta.icon
     }
   },

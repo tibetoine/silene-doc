@@ -81,7 +81,7 @@ export default new Vuex.Store({
     async getSharepointResidences(context) {
       try {
         const response = await rest.getSharepointResidences();
-        const residences = response.data.residences;
+        const residences = response.data;
         /* 2/ Enregistrement dans le store */
         context.commit("SET_SHAREPOINT_RESIDENCES_LIST", residences);
       } catch (error) {
@@ -131,15 +131,11 @@ export default new Vuex.Store({
     },
     async getSharepointResidenceDocs (context, residence) {
 
-      var librariesUrl = []
-      // console.log('getSharepointResidenceDocs - residence : ', residence)
-      residence.libraries.forEach(element => {
-        librariesUrl.push(element.libraryURL)
-      });
+      
       try {
-        // console.log('Get avec les params residenceId: ',residenceId, ' arrayUrl : ', arrayUrl )
+        // console.log('Get avec les params residenceId: ',residence.residenceId)
 
-        const response = await rest.getSharepointResidenceDocs(residence.residenceId, librariesUrl.join());
+        const response = await rest.getSharepointResidenceDocs(residence.residenceId);
         const documents = response.data.result;
         /* 2/ Enregistrement dans le store */
         context.commit("SET_SHAREPOINT_DOCS_LIST", documents);

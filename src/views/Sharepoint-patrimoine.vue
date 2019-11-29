@@ -124,8 +124,13 @@ export default {
       },
       CCTP: {
         description: "Rapport d'Inspection des Canalisations",
-        icon: "calendar_view_day",
+        icon: "menu_book",
         class: "blue white--text"
+      },
+      Annexe: {
+        description: "Rapport d'Inspection des Canalisations",
+        icon: "menu_book",
+        class: "green lighten-1 white--text"
       }
     }
   }),
@@ -195,8 +200,8 @@ export default {
     residences() {
       var filteredResidences = this.$store.state.sharepointResidences.fullList;
       return filteredResidences.map(item => {
-        let disabled = !item.libraries || item.libraries.length <= 0;
-        item.disabled = disabled;
+        /*let disabled = !item.libraries || item.libraries.length <= 0;
+        item.disabled = disabled;*/
         return item;
       });
     },

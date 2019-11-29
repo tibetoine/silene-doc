@@ -208,9 +208,7 @@ export default {
     }),
     residences() {
       var filteredResidences = this.$store.state.sharepointResidences.fullList;
-      return filteredResidences.map(item => {
-        let disabled = !item.libraries || item.libraries.length <= 0;
-        item.disabled = disabled;
+      return filteredResidences.map(item => {        
         return item;
       });
     },
