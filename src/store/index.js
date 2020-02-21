@@ -19,7 +19,7 @@ export default new Vuex.Store({
       errorState: false,
       errorMessage: "Aucune erreur enregistré"
     },
-    currentResidence: null,    
+    currentResidence: null,
     sharepointResidences: {
       selectedResidence: null,
       fullList: []
@@ -67,6 +67,7 @@ export default new Vuex.Store({
         const diagDocs = response.data.result;
         /* 2/ Enregistrement dans le store */
         context.commit("SET_DOCS_LIST", diagDocs);
+        return diagDocs
       } catch (error) {
         // Gestion de l'erreur
         // Toggle message erreur.
@@ -77,7 +78,7 @@ export default new Vuex.Store({
           error
         );
       }
-    },    
+    },
     async getSharepointResidences(context) {
       try {
         const response = await rest.getSharepointResidences();
@@ -96,14 +97,13 @@ export default new Vuex.Store({
     },
     async getSharepointDoc(context, urlDoc) {
       try {
-        const response = await rest.getSharepointDocByUrl(urlDoc);
-        /* TODO Manipulation d'un fichier */
-        const sharepointDocResponse = response;
-        /* 2/ Enregistrement dans le store */
-        context.commit("SET_SHAREPOINT_DOC", sharepointDocResponse);
+        console.log(urlDoc)
+        const response = await rest.getSharepointDocByUrl(encodeURIComponent(urlDoc));
+        return response
       } catch (error) {
         // Gestion de l'erreur
         // Toggle message erreur.
+        console.log('Erreur lors de la récupération du doc',error)
         context.commit(
           "SET_ERROR",
           "Impossible de récupérer ce document Sharepoint",
@@ -119,6 +119,7 @@ export default new Vuex.Store({
         const documents = response.data.result;
         /* 2/ Enregistrement dans le store */
         context.commit("SET_SHAREPOINT_PLANS_LIST", documents);
+        return documents
       } catch (error) {
         // Gestion de l'erreur
         // Toggle message erreur.
@@ -131,7 +132,7 @@ export default new Vuex.Store({
     },
     async getSharepointResidenceDocs (context, residence) {
 
-      
+
       try {
         // console.log('Get avec les params residenceId: ',residence.residenceId)
 
@@ -139,6 +140,8 @@ export default new Vuex.Store({
         const documents = response.data.result;
         /* 2/ Enregistrement dans le store */
         context.commit("SET_SHAREPOINT_DOCS_LIST", documents);
+
+        return documents
       } catch (error) {
         // Gestion de l'erreur
         // Toggle message erreur.

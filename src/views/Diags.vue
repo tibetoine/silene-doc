@@ -1,10 +1,60 @@
 <template>
   <v-container>
+    <v-overlay
+      opacity="0.46"
+      :value="overlay"
+      z-index="200"
+    >
+      <v-container style="height: 400px;">
+        <v-row
+          class="fill-height"
+          align-content="center"
+          justify="center"
+        >
+          <v-col
+            class="title text-center"
+            cols="12"
+          >
+            {{loadingText}}
+          </v-col>
+          <v-col cols="6">
+            <v-progress-linear
+              color="deep-purple accent-4"
+              indeterminate
+              rounded
+              height="6"
+            ></v-progress-linear>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-overlay>
+
+    <v-overlay
+      opacity="0.46"
+      :value="alertOverlay"
+      z-index="200"
+      @click="alertOverlay=false"
+    >
+      <v-alert
+        prominent
+        type="warning"
+        dark
+        border="left"
+        transition="scale-transition"
+      >
+        <v-row align="center">
+        <v-col class="grow">{{errorText}}</v-col>
+        <v-col class="shrink">
+          <v-btn color="grey darken-2" @click="alertOverlay=false">Fermer</v-btn>
+        </v-col>
+      </v-row>
+      </v-alert>
+    </v-overlay>
     <v-autocomplete
       label="Résidences"
       :items="residences"
       v-model="selected"
-      color="blue-grey lighten-2"
+      color="blue lighten-1"
       item-value="residence"
       prepend-icon="mdi-city"
       return-object
@@ -14,9 +64,11 @@
       <template v-slot:selection="data">
         <v-chip
           :input-value="data.selected"
-          color="blue-grey lighten-2"
+          color="blue lighten-1"
           class="white--text"
           v-on="data.on"
+          close
+          @click:close="removeResidence()"
         >
           <v-icon left>mdi-office-building</v-icon>
           <span>{{data.item.residenceId}} - {{data.item.residenceName}}</span>
@@ -36,11 +88,16 @@
         </v-list-item-action>
       </template>
     </v-autocomplete>
-    <v-text-field
-      v-if="(diagDocs.length > 0 || filter !== '')"
+
+    <v-text-field v-if="(diagDocs.length > 0 || filter !== '')"
       v-model="filter"
-      label="Filtrer ici par nom ou par type (Par exemple 'DAPP' ou un numéro de lot de cette résidence)"
-      outlined
+      prepend-icon="filter_list"
+      filled
+      clear-icon="mdi-close-circle"
+      clearable
+      label="C'est par ici pour filtrer ... (Par exemple 'DAPP' ou un numéro de lot de cette résidence)"
+      type="text"
+      @click:clear="clearFilter"
     ></v-text-field>
     <v-list v-if="diagDocs.length > 0" two-line>
       <template v-for="(item) in diagDocs">
@@ -108,12 +165,18 @@
 import { mapState } from "vuex";
 import { removeAccent, filterResidence } from "../shared/helper";
 
+
 export default {
   name: "diags",
   data: () => ({
     selected: null,
     dialog: false,
+    errorText : "Oups! Il y a eu une erreur",
+    loadingText : "Chargement des données",
     filter: "",
+    overlay: false,
+    alertOverlay: false,
+    downloadButtonVisible: false,
     urlResidenceId: "",
     items: {
       BSDA: {
@@ -199,17 +262,34 @@ export default {
     }
   },
   mounted() {
-    
+
   },
   watch: {
     selected(newValue) {
-      // so now comparing your old to new array you would know if a state got
-      // added or removed, and fire subsequent methods accordingly.
-      this.$store.dispatch(
-        "setCurrentResidence",
-        newValue
-      );
-      this.$store.dispatch("getResidenceDocs", newValue.residenceId);
+      if (!newValue) {
+        return
+      }
+
+      try {
+        this.$store.dispatch("setCurrentResidence", newValue);
+        this.loadingText = "Recherche des plans sur Sharepoint"
+        this.overlay = true
+        // console.log('overlay = true ? ', this.overlay)
+        this.$store.dispatch("getResidenceDocs", newValue.residenceId).then((documents)=> {
+            if (!documents || documents.length == 0) {
+              console.log(this.currentResidence)
+              this.errorText = "Aucun documents trouvés pour cette résidence : " + this.currentResidence.residenceId + " - " + this.currentResidence.residenceName
+              this.alertOverlay = true
+            }
+            // console.log('this.overlay = false : ', this.overlay)
+            setTimeout(()=> {this.overlay = false}, 400);
+          }
+        )
+      } catch (e) {
+        console.error(e)
+        this.overlay = false
+      }
+
     },
     currentResidence(newValue) {
 
@@ -219,6 +299,12 @@ export default {
     }
   },
   methods: {
+    clearFilter () {
+      this.filter = ""
+    },
+    removeResidence () {
+      this.selected = null
+    },
     getTypeItemsClass: function(type) {
       let defaultClass = "blue white--text";
       // console.log('Récupération de classe pour : ', type, this.items[type])
@@ -237,11 +323,11 @@ export default {
       } else {
         return defaultIcon;
       }
-    }, 
+    },
     filterResidence: function(item, queryText) {
       return filterResidence(item, queryText)
     }
-    
+
   },
   computed: {
     ...mapState({

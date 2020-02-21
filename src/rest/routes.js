@@ -6,6 +6,10 @@ export default {
   getSharepointResidences: () => api.get(`api-ged-sharepoint/residences`),
   getSharepointResidenceDocs: (residenceId) => api.get(`api-ged-sharepoint/residences/${residenceId}/docs`),
   getSharepointResidencePlans: (residenceId) => api.get(`api-ged-sharepoint/residences/${residenceId}/plans`),
-  getSharepointDocByUrl: (urlDoc) => api.getFile(`api-ged-sharepoint/residences/doc?urlDoc=${urlDoc}`)
-  
+  getSharepointDocByUrl: (urlDoc) => {
+    let url = `api-ged-sharepoint/residences/doc?urlDoc=${urlDoc}`
+    console.log(url)
+    return api.getFile(url)
+  }
+
 }
