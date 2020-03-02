@@ -89,6 +89,31 @@
       </template>
     </v-autocomplete>
 
+    <template>
+      <v-layout column class="silene-fab-container">
+        <v-btn
+          v-if="downloadButtonVisible"
+          dark
+          fab
+          color="red"
+          class="silene-fab-button"
+          @click="downloadAll"
+        >
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+
+        <v-btn
+          dark
+          fab
+          color="blue"
+          @click="dialog = true"
+          class="silene-fab-button"
+        >
+          <v-icon>info</v-icon>
+        </v-btn>
+      </v-layout>
+    </template>
+
     <v-text-field v-if="(diagDocs.length > 0 || filter !== '')"
       v-model="filter"
       prepend-icon="filter_list"
@@ -109,13 +134,15 @@
             <v-list-item-title v-html="item.fileName"></v-list-item-title>
             <v-list-item-subtitle v-html="item.type"></v-list-item-subtitle>
           </v-list-item-content>
-          <v-list-item-action>
-            <v-btn icon @click="dialog = true">
-              <v-icon color="grey">info</v-icon>
-            </v-btn>
+          <v-list-item-action >
+            <v-checkbox
+              v-model="item.active"
+              color="primary"
+              @change="isDownloadButtonVisible"
+            ></v-checkbox>
           </v-list-item-action>
-          <v-list-item-action>
-            <v-btn icon :href="item.link">
+          <v-list-item-action >
+            <v-btn icon target="_blank" @click="downloadFile(item.link)">
               <v-icon color="grey">get_app</v-icon>
             </v-btn>
           </v-list-item-action>
@@ -164,7 +191,7 @@
 <script>
 import { mapState } from "vuex";
 import { removeAccent, filterResidence } from "../shared/helper";
-
+import JSZip from 'jszip'
 
 export default {
   name: "diags",
@@ -277,7 +304,7 @@ export default {
         // console.log('overlay = true ? ', this.overlay)
         this.$store.dispatch("getResidenceDocs", newValue.residenceId).then((documents)=> {
             if (!documents || documents.length == 0) {
-              console.log(this.currentResidence)
+              // console.log(this.currentResidence)
               this.errorText = "Aucun documents trouvés pour cette résidence : " + this.currentResidence.residenceId + " - " + this.currentResidence.residenceName
               this.alertOverlay = true
             }
@@ -304,6 +331,108 @@ export default {
     },
     removeResidence () {
       this.selected = null
+    },
+    isDownloadButtonVisible() {
+      this.downloadButtonVisible = this.diagDocs.filter(item=>item.active).length > 0
+    },
+    async downloadAll() {
+      try {
+        this.loadingText = "Téléchargement de vos documents"
+        // console.log('overlay : ', this.overlay)
+        this.overlay = true
+        // console.log('overlay : ', this.overlay)
+
+        /* TODO - Indicateur de chargement */
+
+        const mysuccess = (data) => {
+          this.forceBlobDownload(data, "silene-doc.zip")
+          this.overlay = false
+        }
+
+        let documentsATelecharger = this.diagDocs.filter(item=>item.active);
+        var zip = new JSZip();
+
+        // console.log(documentsATelecharger)
+
+        const downloadFileFromUrl = async (fileUrl) => {
+          // console.log('Début traitement du fichier %s ', fileToDownload.sharepointServerRelativeUrl)
+          return this.$store
+              .dispatch("getDiagsDoc", fileUrl)
+        }
+
+        const processAFile = async (fileToDownload) => {
+
+          return downloadFileFromUrl(fileToDownload).then((downloadedFile) => {
+
+            var filename = "";
+            var disposition = downloadedFile.headers["content-disposition"]
+            if (!disposition) {
+              disposition = downloadedFile.headers["Content-Disposition"]
+            }
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                var matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) {
+                  filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+            zip.file(filename, new Blob([downloadedFile.data]));
+            // console.log('Traitement du fichier %s terminé', filename)
+          }).catch ((e) => console.error('Erreur lors du téléchargement / insertion dans zip',e))
+        }
+
+        const processFilesToDownload = async (filesToDownload) => {
+          return Promise.all(filesToDownload.map(file => processAFile(file.link)))
+        }
+
+        processFilesToDownload(documentsATelecharger).then(()=> {
+          zip.generateAsync({type:"blob"}).then(function(content) {
+            mysuccess(content)
+          }).catch( (e)=> console.error('erreur Generating zip file',e));
+        })
+      }
+      catch (e) {
+        console.error(e)
+        this.overlay = false
+
+      }
+    },
+    downloadFile(urlDiagDoc) {
+      // console.log("downloadFile ; ", urlDiagDoc)
+      this.$store
+        .dispatch("getDiagsDoc", urlDiagDoc)
+        .then((downloadedFile) => {
+          /* Récupère le nom du fichier */
+          var filename = "";
+          var disposition = downloadedFile.headers["content-disposition"]
+          if (!disposition) {
+            disposition = downloadedFile.headers["Content-Disposition"]
+          }
+          if (disposition && disposition.indexOf('attachment') !== -1) {
+              var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+              var matches = filenameRegex.exec(disposition);
+              if (matches != null && matches[1]) {
+                filename = matches[1].replace(/['"]/g, '');
+              }
+          }
+          this.forceFileDownload(downloadedFile, filename);
+        }).catch ((e) => console.error(e))
+    },
+    forceFileDownload(response, fileName) {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName); //or any other extension
+      document.body.appendChild(link);
+      link.click();
+    },
+    forceBlobDownload(content, fileName) {
+      const url = window.URL.createObjectURL(content);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName); //or any other extension
+      document.body.appendChild(link);
+      link.click();
     },
     getTypeItemsClass: function(type) {
       let defaultClass = "blue white--text";
@@ -372,3 +501,18 @@ export default {
   }
 };
 </script>
+
+
+<style scoped>
+  .silene-fab-container {
+    z-index:100;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    padding:10px;
+  }
+  .silene-fab-button {
+    margin-bottom:10px;
+  }
+
+</style>

@@ -67,6 +67,8 @@
           color="blue lighten-1"
           class="white--text"
           v-on="data.on"
+          close
+          @click:close="removeResidence()"
         >
           <v-icon left>mdi-office-building</v-icon>
           <span>{{data.item.residenceId}} - {{data.item.residenceName}}</span>
@@ -86,11 +88,16 @@
         </v-list-item-action>
       </template>
     </v-autocomplete>
-    <v-text-field
-      v-if="(sharepointDocs.length > 0 || filter !== '')"
+
+    <v-text-field v-if="sharepointDocs.length > 0 || filter.length > 0"
       v-model="filter"
-      label="Filtrer ici "
-      outlined
+      prepend-icon="filter_list"
+      filled
+      clear-icon="mdi-close-circle"
+      clearable
+      label="C'est par ici pour filtrer ..."
+      type="text"
+      @click:clear="clearFilter"
     ></v-text-field>
 
     <template>
@@ -259,8 +266,6 @@ export default {
       this.selected = null
     },
     isDownloadButtonVisible() {
-      console.log('mm')
-      console.log(this.sharepointDocs.filter(item=>item.active).length)
       this.downloadButtonVisible = this.sharepointDocs.filter(item=>item.active).length > 0
     },
     async downloadAll() {
@@ -273,17 +278,17 @@ export default {
         /* TODO - Indicateur de chargement */
 
         const mysuccess = (data) => {
-          this.forceBlobDownload(data, "test.zip")
+          this.forceBlobDownload(data, "silene-doc.zip")
           this.overlay = false
         }
 
         let documentsATelecharger = this.sharepointDocs.filter(item=>item.active);
         var zip = new JSZip();
 
-        console.log(documentsATelecharger)
+        // console.log(documentsATelecharger)
 
         const dispatchAsyncEvent = async (fileToDownload) => {
-          console.log('Début traitement du fichier %s ', fileToDownload.sharepointServerRelativeUrl)
+          // console.log('Début traitement du fichier %s ', fileToDownload.sharepointServerRelativeUrl)
           return this.$store
               .dispatch("getSharepointDoc", fileToDownload.sharepointServerRelativeUrl)
         }
@@ -295,7 +300,7 @@ export default {
             var parts = fileToDownload.sharepointServerRelativeUrl.split("/");
             var fileName = parts[parts.length - 1];
             zip.file(fileName, new Blob([downloadedFile.data]));
-            console.log('Traitement du fichier %s terminé', fileName)
+            // console.log('Traitement du fichier %s terminé', fileName)
           }).catch ((e) => console.error('Erreur lors du téléchargement / insertion dans zip',e))
         }
 

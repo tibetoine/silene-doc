@@ -97,16 +97,32 @@ export default new Vuex.Store({
     },
     async getSharepointDoc(context, urlDoc) {
       try {
-        console.log(urlDoc)
+        // console.log(urlDoc)
         const response = await rest.getSharepointDocByUrl(encodeURIComponent(urlDoc));
         return response
       } catch (error) {
         // Gestion de l'erreur
         // Toggle message erreur.
-        console.log('Erreur lors de la récupération du doc',error)
+        console.error('Erreur lors de la récupération du doc',error)
         context.commit(
           "SET_ERROR",
           "Impossible de récupérer ce document Sharepoint",
+          error
+        );
+      }
+    },
+    async getDiagsDoc(context, urlDoc) {
+      try {
+        // console.log(urlDoc)
+        const response = await rest.getDiagDocByUrl(urlDoc);
+        return response
+      } catch (error) {
+        // Gestion de l'erreur
+        // Toggle message erreur.
+        console.error('Erreur lors de la récupération du doc',error)
+        context.commit(
+          "SET_ERROR",
+          "Impossible de récupérer ce document",
           error
         );
       }

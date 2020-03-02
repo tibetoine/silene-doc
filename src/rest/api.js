@@ -8,7 +8,13 @@ const axiosInstance = axios.create({
     }
   ]
 });
-const url = path => window.location.origin + "/" + path;
+const url = path => {
+  var separator = '/';
+  if (path && path.startsWith('/')){
+    separator = '';
+  }
+  return window.location.origin + separator + path;
+}
 
 export default {
   get: async path => {
@@ -22,6 +28,15 @@ export default {
   getFile: async path => {
     try {
       var obj = await axiosInstance.get(url(path), {responseType:'arraybuffer'});
+    } catch (error) {
+      console.error(error);
+    }
+    return obj;
+  },
+  getDiagFile: async path => {
+    try {
+      var obj = await axiosInstance.get(url(path), {responseType:'blob'});
+      // console.log(obj)
     } catch (error) {
       console.error(error);
     }

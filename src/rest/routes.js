@@ -8,8 +8,9 @@ export default {
   getSharepointResidencePlans: (residenceId) => api.get(`api-ged-sharepoint/residences/${residenceId}/plans`),
   getSharepointDocByUrl: (urlDoc) => {
     let url = `api-ged-sharepoint/residences/doc?urlDoc=${urlDoc}`
-    console.log(url)
+    // console.log(url)
     return api.getFile(url)
-  }
+  },
+  getDiagDocByUrl: (urlDoc) => api.getDiagFile(urlDoc)
 
 }

@@ -251,7 +251,6 @@ export default {
         // console.log('overlay = true ? ', this.overlay)
         this.$store.dispatch("getSharepointResidencePlans", newValue).then((documents)=> {
             if (!documents || documents.length == 0) {
-              console.log(this.currentResidence)
               this.errorText = "Aucun documents trouvés pour cette résidence : " + this.currentResidence.residenceId + " - " + this.currentResidence.residenceName
               this.alertOverlay = true
             }
@@ -283,21 +282,20 @@ export default {
     async downloadAll() {
       try {
         this.loadingText = "Téléchargement de vos plans"
-        console.log('overlay : ', this.overlay)
+        // console.log('overlay : ', this.overlay)
         this.overlay = true
-        console.log('overlay : ', this.overlay)
+        // console.log('overlay : ', this.overlay)
 
         /* TODO - Indicateur de chargement */
 
         const mysuccess = (data) => {
-          this.forceBlobDownload(data, "test.zip")
+          this.forceBlobDownload(data, "silene-doc.zip")
           this.overlay = false
         }
 
         let documentsATelecharger = this.sharepointDocs.filter(item=>item.active);
         var zip = new JSZip();
 
-        console.log(documentsATelecharger)
 
         const dispatchAsyncEvent = async (fileToDownload) => {
           return this.$store
@@ -310,7 +308,7 @@ export default {
             var parts = fileToDownload.sharepointServerRelativeUrl.split("/");
             var fileName = parts[parts.length - 1];
             zip.file(fileName, new Blob([downloadedFile.data]));
-            console.log('Traitement du fichier %s terminé', fileName)
+            // console.log('Traitement du fichier %s terminé', fileName)
           }).catch ((e) => console.error('Erreur lors du téléchargement / insertion dans zip',e))
         }
 
